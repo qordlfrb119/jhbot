@@ -2,7 +2,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import { Configuration, OpenAIApi } from 'openai';
+const { Configuration, OpenAIApi } = require('openai');
 import fs from 'fs';
 
 dotenv.config();
