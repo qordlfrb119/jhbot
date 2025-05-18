@@ -3,7 +3,7 @@ const input = document.getElementById('input');
 const send = document.getElementById('send');
 
 // 오늘의 글 불러오기
-fetch('https://너의-render-url.onrender.com/api/daily')
+fetch('https://jhbot-nx5b.onrender.com/api/daily')
   .then(res => res.json())
   .then(data => {
     document.getElementById('daily-quote').textContent = `오늘의 글: "${data.quote}"`;
@@ -26,7 +26,7 @@ send.addEventListener('click', () => {
   appendMessage('user', userText);
   input.value = '';
 
-  fetch('https://너의-render-url.onrender.com/api/chat', {
+  fetch('https://jhbot-nx5b.onrender.com/api/chat', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ message: userText })

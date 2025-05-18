@@ -9,7 +9,12 @@ dotenv.config();
 const app = express();
 const port = process.env.PORT || 5001;
 
-app.use(cors());
+app.use(cors({
+  origin: 'https://jhbot-bay.vercel.app', 
+  methods: ['GET', 'POST'],
+  credentials: true
+}));
+
 app.use(express.json());
 
 const quotes = JSON.parse(fs.readFileSync('./quotes.json', 'utf-8'));
