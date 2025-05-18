@@ -1,6 +1,7 @@
 {
   "name": "jhbot-backend",
   "version": "1.0.0",
+  "type": "module",
   "description": "정회일 챗봇 백엔드 서버",
   "main": "server.js",
   "scripts": {
