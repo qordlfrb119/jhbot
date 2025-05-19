@@ -20,7 +20,7 @@ app.use(express.json());
 let pdfPages = [];
 
 const loadPDF = async () => {
-  const filePath = path.join(__dirname, 'start.pdf');
+  const filePath = path.join(__dirname, 'start.pdf'); // 반드시 파일명 정확하게!
   const dataBuffer = fs.readFileSync(filePath);
   const data = await pdfParse(dataBuffer);
   pdfPages = data.text.split(/\f/).map((text, index) => ({
@@ -41,7 +41,6 @@ function isRelatedQuestion(text) {
 
 function findMatchingQuote(question) {
   const qWords = question.toLowerCase().split(/[^가-힣a-zA-Z0-9]+/).filter(Boolean);
-
   let bestMatch = null;
 
   for (const { page, text } of pdfPages) {
@@ -50,22 +49,15 @@ function findMatchingQuote(question) {
     for (const line of lines) {
       const lineWords = line.toLowerCase().split(/[^가-힣a-zA-Z0-9]+/);
       const common = qWords.filter(q => lineWords.includes(q));
+      const score = common.length;
 
-      if (common.length >= 2) {
-        return { quote: line, page };
-      }
-
-      if (!bestMatch || common.length > bestMatch.score) {
-        bestMatch = { quote: line, page, score: common.length };
+      if (score >= 1 && (!bestMatch || score > bestMatch.score)) {
+        bestMatch = { quote: line, page, score };
       }
     }
   }
 
-  if (bestMatch && bestMatch.score >= 1) {
-    return { quote: bestMatch.quote, page: bestMatch.page };
-  }
-
-  return null;
+  return bestMatch || null;
 }
 
 app.get('/api/daily', (req, res) => {
@@ -83,8 +75,11 @@ app.post('/api/chat', (req, res) => {
   const isRelated = isRelatedQuestion(question);
 
   if (result) {
-    const formatted = `> “${result.quote}”\n\n출처 : (start.pdf - ${result.page})`;
-    return res.json({ reply: formatted });
+    const header = "그 마음, 정말 이해해요.\n회일샘도 죽고 싶을 만큼 힘들었던 순간이 여러 번 있었다고 고백해요.\n책에서는 이렇게 말해요.";
+    const quote = `> “${result.quote}”`;
+    const footer = `출처 : (start.pdf - ${result.page})`;
+    const fullReply = `${header}\n\n${quote}\n\n${footer}`;
+    return res.json({ reply: fullReply });
   } else if (isRelated) {
     return res.json({ reply: '죄송해요. 관련 정보를 가지고 있지 않아요' });
   } else {
@@ -96,6 +91,5 @@ app.listen(port, async () => {
   await loadPDF();
   console.log(`✅ PDF 기반 챗봇 서버 실행 중! 포트: ${port}`);
 });
-
 
 
