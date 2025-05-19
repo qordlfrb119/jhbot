@@ -1,9 +1,9 @@
-import express from 'express';
-import cors from 'cors';
-import dotenv from 'dotenv';
-import fs from 'fs';
-import pdfParse from 'pdf-parse';
-import path from 'path';
+const express = require('express');
+const cors = require('cors');
+const dotenv = require('dotenv');
+const fs = require('fs');
+const pdfParse = require('pdf-parse');
+const path = require('path');
 
 dotenv.config();
 
