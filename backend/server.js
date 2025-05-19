@@ -39,15 +39,22 @@ function isRelatedQuestion(text) {
   return pdfKeywords.some(keyword => text.includes(keyword));
 }
 
+function extractKeywords(text) {
+  // 기본 분리 + 단어 내부 키워드 추출
+  const baseWords = text.toLowerCase().split(/[^가-힣a-zA-Z0-9]+/).filter(Boolean);
+  const extra = pdfKeywords.filter(k => text.includes(k));
+  return Array.from(new Set([...baseWords, ...extra]));
+}
+
 function findMatchingQuote(question) {
-  const qWords = question.toLowerCase().split(/[^가-힣a-zA-Z0-9]+/).filter(Boolean);
+    const qWords = extractKeywords(question);
   let bestMatch = null;
 
   for (const { page, text } of pdfPages) {
     const lines = text.split('\n').map(line => line.trim()).filter(Boolean);
 
     for (const line of lines) {
-      const lineWords = line.toLowerCase().split(/[^가-힣a-zA-Z0-9]+/);
+      const lineWords = extractKeywords(line);
       const common = qWords.filter(q => lineWords.includes(q));
       const score = common.length;
 
