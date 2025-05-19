@@ -20,7 +20,7 @@ app.use(express.json());
 let pdfPages = [];
 
 const loadPDF = async () => {
-  const filePath = path.join(__dirname, '이제시작해도괜찮아.pdf');
+  const filePath = path.join(__dirname, 'start.pdf');
   const dataBuffer = fs.readFileSync(filePath);
   const data = await pdfParse(dataBuffer);
   pdfPages = data.text.split(/\f/).map((text, index) => ({
@@ -83,7 +83,7 @@ app.post('/api/chat', (req, res) => {
   const isRelated = isRelatedQuestion(question);
 
   if (result) {
-    const formatted = `> “${result.quote}”\n\n출처 : (이제시작해도괜찮아.pdf - ${result.page})`;
+    const formatted = `> “${result.quote}”\n\n출처 : (start.pdf - ${result.page})`;
     return res.json({ reply: formatted });
   } else if (isRelated) {
     return res.json({ reply: '죄송해요. 관련 정보를 가지고 있지 않아요' });
