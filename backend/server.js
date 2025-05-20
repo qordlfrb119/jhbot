@@ -24,6 +24,10 @@ const loadPDF = async () => {
   const dataBuffer = fs.readFileSync(filePath);
   const data = await pdfParse(dataBuffer);
   allText = data.text;
+
+  // ✅ 로그 추가: PDF 로딩 여부 확인용
+  console.log("✅ PDF 로딩 완료");
+  console.log("✂️ 추출된 텍스트 미리보기:", allText.slice(0, 300)); // 앞부분 300자 확인용
 };
 
 function findRelevantSentence(question) {
