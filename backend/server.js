@@ -11,7 +11,7 @@ const app = express();
 const port = process.env.PORT || 5001;
 
 app.use(cors({
-  origin: 'https://jhbot-bay.vercel.app',
+  origin: 'https://jhbot-bay.vercel.app', // 프론트 주소
   methods: ['GET', 'POST'],
   credentials: true
 }));
@@ -20,13 +20,14 @@ app.use(express.json());
 let allText = '';
 
 const loadPDF = async () => {
-  const filePath = path.join(__dirname, 'start.pdf'); // start.pdf는 backend 폴더 안에 있어야 함
+  const filePath = path.join(__dirname, 'start.pdf'); // start.pdf는 backend 폴더에 있어야 함
   const dataBuffer = fs.readFileSync(filePath);
   const data = await pdfParse(dataBuffer);
   allText = data.text;
 
+  // 확인용 로그
   console.log("✅ PDF 로딩 완료");
-  console.log("✂️ 추출된 텍스트 미리보기:", allText.slice(0, 300));
+  console.log("✂️ 텍스트 미리보기:", allText.slice(0, 300));
 };
 
 function findRelevantSentence(question) {
@@ -36,13 +37,11 @@ function findRelevantSentence(question) {
   let bestMatch = null;
 
   for (const line of lines) {
-    const lineWords = line.toLowerCase().split(/[^가-힣a-zA-Z0-9]+/);
-    const common = qWords.filter(word =>
-      lineWords.includes(word) || line.includes(word)
-    );
-    const score = common.length;
+    const lowerLine = line.toLowerCase();
 
-    if (score >= 2) return line;
+    const score = qWords.filter(word => lowerLine.includes(word)).length;
+
+    if (score >= 1) return line; // 하나라도 포함되면 바로 반환
     if (!bestMatch || score > bestMatch.score) {
       bestMatch = { text: line, score };
     }
