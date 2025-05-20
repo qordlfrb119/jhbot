@@ -38,12 +38,20 @@ function findRelevantSentence(question) {
 
   for (const line of lines) {
     const lineWords = line.toLowerCase().split(/[^가-힣a-zA-Z0-9]+/);
-    const common = qWords.filter(word => lineWords.includes(word));
+    const common = qWords.filter(word =>
+      lineWords.includes(word) || line.includes(word) // ← 이 부분만 추가해주는 거야!
+    );
     const score = common.length;
 
-    if (score >= 2) return line; // 유사 단어 2개 이상이면 바로 반환
+    if (score >= 2) return line;
     if (!bestMatch || score > bestMatch.score) {
       bestMatch = { text: line, score };
+    }
+  }
+
+  if (bestMatch && bestMatch.score >= 1) return bestMatch.text;
+  return null;
+}
     }
   }
 
