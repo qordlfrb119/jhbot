@@ -17,58 +17,38 @@ app.use(cors({
 }));
 app.use(express.json());
 
-let pdfPages = [];
+let allText = '';
 
 const loadPDF = async () => {
-  const filePath = path.join(__dirname, 'start.pdf'); // 반드시 파일명 정확하게!
+  const filePath = path.join(__dirname, 'start.pdf'); // start.pdf가 backend 폴더 안에 있어야 함
   const dataBuffer = fs.readFileSync(filePath);
   const data = await pdfParse(dataBuffer);
-  pdfPages = data.text.split(/\f/).map((text, index) => ({
-    page: index + 1,
-    text: text.trim()
-  }));
+  allText = data.text;
 };
 
-const pdfKeywords = [
-  "포기", "시작", "성장", "꿈", "아픔", "고통", "감정", "감사",
-  "시간", "죽음", "도전", "희망", "회복", "절망", "노력", "자기계발",
-  "자신감", "응원", "동기부여", "삶", "버팀", "멘토", "실수", "실패", "겸손"
-];
+function findRelevantSentence(question) {
+  const lines = allText.split('\n').map(line => line.trim()).filter(line => line.length > 10);
+  const qWords = question.toLowerCase().split(/[^가-힣a-zA-Z0-9]+/).filter(Boolean);
 
-function isRelatedQuestion(text) {
-  return pdfKeywords.some(keyword => text.includes(keyword));
-}
-
-function extractKeywords(text) {
-  // 기본 분리 + 단어 내부 키워드 추출
-  const baseWords = text.toLowerCase().split(/[^가-힣a-zA-Z0-9]+/).filter(Boolean);
-  const extra = pdfKeywords.filter(k => text.includes(k));
-  return Array.from(new Set([...baseWords, ...extra]));
-}
-
-function findMatchingQuote(question) {
-    const qWords = extractKeywords(question);
   let bestMatch = null;
 
-  for (const { page, text } of pdfPages) {
-    const lines = text.split('\n').map(line => line.trim()).filter(Boolean);
+  for (const line of lines) {
+    const lineWords = line.toLowerCase().split(/[^가-힣a-zA-Z0-9]+/);
+    const common = qWords.filter(word => lineWords.includes(word));
+    const score = common.length;
 
-    for (const line of lines) {
-      const lineWords = extractKeywords(line);
-      const common = qWords.filter(q => lineWords.includes(q));
-      const score = common.length;
-
-      if (score >= 1 && (!bestMatch || score > bestMatch.score)) {
-        bestMatch = { quote: line, page, score };
-      }
+    if (score >= 2) return line; // 유사 단어 2개 이상이면 바로 반환
+    if (!bestMatch || score > bestMatch.score) {
+      bestMatch = { text: line, score };
     }
   }
 
-  return bestMatch || null;
+  if (bestMatch && bestMatch.score >= 1) return bestMatch.text;
+  return null;
 }
 
 app.get('/api/daily', (req, res) => {
-  res.json({ quote: "이제는 책 원문 기반으로만 답변합니다." });
+  res.json({ quote: "책 원문에서 실시간으로 검색해 답해드릴게요." });
 });
 
 app.post('/api/chat', (req, res) => {
@@ -78,25 +58,19 @@ app.post('/api/chat', (req, res) => {
     return res.json({ reply: '질문이 비어있어요. 다시 입력해주세요.' });
   }
 
-  const result = findMatchingQuote(question);
-  const isRelated = isRelatedQuestion(question);
+  const result = findRelevantSentence(question);
 
   if (result) {
-    const header = "그 마음, 정말 이해해요.\n회일샘도 죽고 싶을 만큼 힘들었던 순간이 여러 번 있었다고 고백해요.\n책에서는 이렇게 말해요.";
-    const quote = `> “${result.quote}”`;
-    const footer = `출처 : (start.pdf - ${result.page})`;
-    const fullReply = `${header}\n\n${quote}\n\n${footer}`;
-    return res.json({ reply: fullReply });
-  } else if (isRelated) {
-    return res.json({ reply: '죄송해요. 관련 정보를 가지고 있지 않아요' });
+    return res.json({ reply: `“${result}”` });
   } else {
-    return res.json({ reply: "저는 '이제 시작해도 괜찮아'에 관한 안내만 가능합니다" });
+    return res.json({ reply: '죄송해요. 관련 정보를 책에서 찾을 수 없었어요.' });
   }
 });
 
 app.listen(port, async () => {
   await loadPDF();
-  console.log(`✅ PDF 기반 챗봇 서버 실행 중! 포트: ${port}`);
+  console.log(`✅ PDF 원문 기반 챗봇 서버 실행 중! 포트: ${port}`);
 });
+
 
 
