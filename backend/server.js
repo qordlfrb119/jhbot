@@ -11,7 +11,7 @@ const app = express();
 const port = process.env.PORT || 5001;
 
 app.use(cors({
-  origin: 'https://jhbot-bay.vercel.app', // 프론트 주소
+  origin: 'https://jhbot-bay.vercel.app',
   methods: ['GET', 'POST'],
   credentials: true
 }));
@@ -20,30 +20,37 @@ app.use(express.json());
 let allText = '';
 
 const loadPDF = async () => {
-  const filePath = path.join(__dirname, 'start.pdf'); // start.pdf는 backend 폴더에 있어야 함
+  const filePath = path.join(__dirname, 'start.pdf');
   const dataBuffer = fs.readFileSync(filePath);
   const data = await pdfParse(dataBuffer);
   allText = data.text;
-
-  // 확인용 로그
   console.log("✅ PDF 로딩 완료");
-  console.log("✂️ 텍스트 미리보기:", allText.slice(0, 300));
+  console.log("✂️ 추출된 텍스트 미리보기:", allText.slice(0, 300));
 };
 
-function findRelevantSentence(question) {
-  const lines = allText.split('\n').map(line => line.trim()).filter(line => line.length > 10);
+// 문단 기반 검색 + 유연한 키워드 매칭
+function findRelevantParagraph(question) {
+  const paragraphs = allText
+    .split(/\n\s*\n/)  // 빈 줄 기준 문단 분리
+    .map(p => p.trim())
+    .filter(p => p.length > 20);  // 너무 짧은 건 제외
+
   const qWords = question.toLowerCase().split(/[^가-힣a-zA-Z0-9]+/).filter(Boolean);
 
   let bestMatch = null;
 
-  for (const line of lines) {
-    const lowerLine = line.toLowerCase();
+  for (const paragraph of paragraphs) {
+    const lowerPara = paragraph.toLowerCase();
+    const paraWords = lowerPara.split(/[^가-힣a-zA-Z0-9]+/);
+    
+    const common = qWords.filter(q =>
+      paraWords.includes(q) || lowerPara.includes(q) // 단어 매치 or 부분 포함
+    );
+    const score = common.length;
 
-    const score = qWords.filter(word => lowerLine.includes(word)).length;
-
-    if (score >= 1) return line; // 하나라도 포함되면 바로 반환
+    if (score >= 2) return paragraph;  // 즉시 반환
     if (!bestMatch || score > bestMatch.score) {
-      bestMatch = { text: line, score };
+      bestMatch = { text: paragraph, score };
     }
   }
 
@@ -62,7 +69,7 @@ app.post('/api/chat', (req, res) => {
     return res.json({ reply: '질문이 비어있어요. 다시 입력해주세요.' });
   }
 
-  const result = findRelevantSentence(question);
+  const result = findRelevantParagraph(question);
 
   if (result) {
     return res.json({ reply: `“${result}”` });
