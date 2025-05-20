@@ -20,14 +20,13 @@ app.use(express.json());
 let allText = '';
 
 const loadPDF = async () => {
-  const filePath = path.join(__dirname, 'start.pdf'); // start.pdf가 backend 폴더 안에 있어야 함
+  const filePath = path.join(__dirname, 'start.pdf'); // start.pdf는 backend 폴더 안에 있어야 함
   const dataBuffer = fs.readFileSync(filePath);
   const data = await pdfParse(dataBuffer);
   allText = data.text;
 
-  // ✅ 로그 추가: PDF 로딩 여부 확인용
   console.log("✅ PDF 로딩 완료");
-  console.log("✂️ 추출된 텍스트 미리보기:", allText.slice(0, 300)); // 앞부분 300자 확인용
+  console.log("✂️ 추출된 텍스트 미리보기:", allText.slice(0, 300));
 };
 
 function findRelevantSentence(question) {
@@ -39,19 +38,13 @@ function findRelevantSentence(question) {
   for (const line of lines) {
     const lineWords = line.toLowerCase().split(/[^가-힣a-zA-Z0-9]+/);
     const common = qWords.filter(word =>
-      lineWords.includes(word) || line.includes(word) // ← 이 부분만 추가해주는 거야!
+      lineWords.includes(word) || line.includes(word)
     );
     const score = common.length;
 
     if (score >= 2) return line;
     if (!bestMatch || score > bestMatch.score) {
       bestMatch = { text: line, score };
-    }
-  }
-
-  if (bestMatch && bestMatch.score >= 1) return bestMatch.text;
-  return null;
-}
     }
   }
 
