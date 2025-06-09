@@ -2,15 +2,17 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import fs from 'fs';
-import { OpenAI } from 'openai'; // ✅ GPT 연동
-import createPrompt from './promptTemplate.js'; // ✅ 프롬프트 함수 따로 분리
+import { OpenAI } from 'openai';
+import createPrompt from './promptTemplate.js';
 
 dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 5001;
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-const quotes = JSON.parse(fs.readFileSync('./quotes.json', 'utf-8'));
+
+const quotesPath = new URL('./quotes.json', import.meta.url);
+const quotes = JSON.parse(fs.readFileSync(quotesPath, 'utf-8'));
 
 app.use(cors({
   origin: 'https://jhbot-bay.vercel.app',
@@ -19,18 +21,17 @@ app.use(cors({
 }));
 app.use(express.json());
 
-// ✅ 오늘의 글 (유지)
+// ✅ 오늘의 글
 app.get('/api/daily', (req, res) => {
   const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
   res.json({ quote: randomQuote });
 });
 
-// ✅ 사용자 입력 기반 GPT 응답 (최대 3개 키워드 포함된 문장 찾기)
+// ✅ 사용자 질문 기반 GPT 응답
 app.post('/api/chat', async (req, res) => {
   const { message } = req.body;
-
-  // 간단한 키워드 추출 (예: 첫 단어 사용)
   const keyword = message.trim().split(' ')[0];
+
   const matchedQuotes = quotes.filter(q => q.text.includes(keyword)).slice(0, 3);
 
   if (matchedQuotes.length === 0) {
@@ -65,5 +66,6 @@ app.post('/api/chat', async (req, res) => {
 app.listen(port, () => {
   console.log(`✅ 정회일 챗봇 서버 실행 중! 포트: ${port}`);
 });
+
 
 
