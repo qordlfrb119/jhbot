@@ -27,18 +27,31 @@ app.get('/api/daily', (req, res) => {
   res.json({ quote: randomQuote });
 });
 
+// ✅ 키워드 매핑 로직
+function extractKeyword(message) {
+  const lower = message.toLowerCase();
+  if (lower.includes('힘들')) return '힘들';
+  if (lower.includes('불안')) return '불안';
+  if (lower.includes('포기')) return '포기';
+  if (lower.includes('외롭')) return '외롭';
+  if (lower.includes('지쳤')) return '지쳤';
+  if (lower.includes('막막')) return '막막';
+  if (lower.includes('죽고')) return '죽고';
+  if (lower.includes('괴롭')) return '괴롭';
+  return message.trim().split(' ')[0]; // fallback: 첫 단어
+}
+
 // ✅ 사용자 질문 기반 GPT 응답
 app.post('/api/chat', async (req, res) => {
   const { message } = req.body;
-  const keyword = message.trim().split(' ')[0];
-
+  const keyword = extractKeyword(message);
   const matchedQuotes = quotes.filter(q => q.text.includes(keyword)).slice(0, 3);
 
   if (matchedQuotes.length === 0) {
     return res.status(404).json({ error: '관련된 문장을 찾을 수 없습니다.' });
   }
 
-  const combinedText = matchedQuotes.map(q => `\"${q.text}\" (📘 ${q.page}쪽)`).join('\n\n');
+  const combinedText = matchedQuotes.map(q => `"${q.text}" (📘 ${q.page}쪽)`).join('\n\n');
   const prompt = createPrompt(message, combinedText);
 
   try {
@@ -66,6 +79,7 @@ app.post('/api/chat', async (req, res) => {
 app.listen(port, () => {
   console.log(`✅ 정회일 챗봇 서버 실행 중! 포트: ${port}`);
 });
+
 
 
 
