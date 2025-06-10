@@ -35,7 +35,18 @@ send.addEventListener('click', () => {
   })
     .then(res => res.json())
     .then(data => {
-      appendMessage('bot', `"${data.reply}"`);
+      // ✅ 안전한 reply 처리
+      let replyText = '';
+
+      if (typeof data.reply === 'string') {
+        replyText = data.reply;
+      } else if (data.reply && typeof data.reply.text === 'string') {
+        replyText = data.reply.text;
+      } else {
+        replyText = '죄송해요. 회일쌤의 문장을 찾지 못했어요.';
+      }
+
+      appendMessage('bot', replyText);
     })
     .catch(() => {
       appendMessage('bot', '죄송해요. 서버와 연결할 수 없어요.');
@@ -46,4 +57,5 @@ send.addEventListener('click', () => {
 input.addEventListener('keypress', (e) => {
   if (e.key === 'Enter') send.click();
 });
+
 
