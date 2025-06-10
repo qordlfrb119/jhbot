@@ -35,7 +35,7 @@ send.addEventListener('click', () => {
   })
     .then(res => res.json())
     .then(data => {
-      // ✅ 안전한 reply 처리
+      // ✅ GPT의 응답 출력
       let replyText = '';
 
       if (typeof data.reply === 'string') {
@@ -47,6 +47,14 @@ send.addEventListener('click', () => {
       }
 
       appendMessage('bot', replyText);
+
+      // ✅ 함께 전송된 원문 인용 문장 출력
+      if (data.sources && Array.isArray(data.sources)) {
+        const sourcesText = data.sources
+          .map(q => `📖 "${q.text}" (📘 ${q.page}쪽)`)
+          .join('\n\n');
+        appendMessage('bot', sourcesText);
+      }
     })
     .catch(() => {
       appendMessage('bot', '죄송해요. 서버와 연결할 수 없어요.');
@@ -57,5 +65,7 @@ send.addEventListener('click', () => {
 input.addEventListener('keypress', (e) => {
   if (e.key === 'Enter') send.click();
 });
+
+
 
 
