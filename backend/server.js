@@ -38,6 +38,9 @@ function extractKeyword(message) {
   if (lower.includes('막막')) return '막막';
   if (lower.includes('죽고')) return '죽고';
   if (lower.includes('괴롭')) return '괴롭';
+  if (lower.includes('고통')) return '고통';
+  if (lower.includes('성장')) return '성장';
+  if (lower.includes('목표')) return '목표';
   return message.trim().split(' ')[0]; // fallback: 첫 단어
 }
 
